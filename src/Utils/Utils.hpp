@@ -11,8 +11,10 @@ class Utils {
 		~Utils();
 	
 	public:
-		static std::string	trim(const std::string& str);
-		static void			ref_trim(std::string& str);
+	static void			ref_trim(std::string& str);
+	static bool			has_char(const char *str, char c);
+	static bool			has_char(const std::string& str, char c);
+	static std::string	trim(const std::string& str);
 };
 
 #endif

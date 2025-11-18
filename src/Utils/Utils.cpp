@@ -42,3 +42,16 @@ void	Utils::ref_trim(std::string& str) {
 
 	str = str.substr(start, end - start + 1);
 }
+
+bool	Utils::has_char(const char *str, char c) {
+	if (str == NULL) return false;
+
+	for (const char *p = str; *p != '\0'; ++p)
+		if (static_cast<unsigned char>(*p) == c) return true;
+	
+	return false;
+}
+
+bool	Utils::has_char(const std::string& str, char c) {
+	return (str.find(c) != std::string::npos);
+}

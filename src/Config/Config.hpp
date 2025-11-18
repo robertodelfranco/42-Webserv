@@ -33,7 +33,7 @@ class Config {
 		size_t	consumeString(const std::string& line, size_t count_line, size_t col);
 		size_t	consumePath(const std::string& line, size_t count_line, size_t col);
 		size_t	consumeSymbol(const std::string& line, size_t count_line, size_t col);
-		size_t	edgeCase(const std::string& line, size_t count_line, size_t col);
+		size_t	edgeCases(const std::string& line, size_t count_line, size_t col);
 };
 
 #endif
