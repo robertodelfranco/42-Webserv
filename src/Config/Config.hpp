@@ -2,15 +2,21 @@
 # define CONFIG_HPP
 
 #include "../Utils/Utils.hpp"
-#include "Server.hpp"
+#include "HttpConfig.hpp"
 
 class Config {
 	private:
-		std::ifstream		configFile;
+		HttpConfig			global_config;
+		std::ifstream		config_file;
 		std::vector<Token>	tokens;
-		std::vector<Server>	servers;
 
 		void	consumeLine(std::string& line, size_t count_line);
+		size_t	consumeDirective(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeNumber(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeString(const std::string& line, size_t count_line, size_t col);
+		size_t	consumePath(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeSymbol(const std::string& line, size_t count_line, size_t col);
+		size_t	edgeCases(const std::string& line, size_t count_line, size_t col);
 
 	public:
 		Config();
@@ -28,12 +34,6 @@ class Config {
 		};
 
 		void	init(const char *file);
-		size_t	consumeIdentifier(const std::string& line, size_t count_line, size_t col);
-		size_t	consumeNumber(const std::string& line, size_t count_line, size_t col);
-		size_t	consumeString(const std::string& line, size_t count_line, size_t col);
-		size_t	consumePath(const std::string& line, size_t count_line, size_t col);
-		size_t	consumeSymbol(const std::string& line, size_t count_line, size_t col);
-		size_t	edgeCases(const std::string& line, size_t count_line, size_t col);
 };
 
 #endif

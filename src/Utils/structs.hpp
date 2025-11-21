@@ -21,16 +21,16 @@
 #define RED "\033[1;31m"
 #define RESET "\033[0m"
 
-enum Method
+enum Methods
 {
-	GET,
-	POST,
-	DELETE,
+	GET = 1,
+	POST = 2,
+	DELETE = 4,
 };
 
 enum TokenType {
 	UNKNOWN,
-	IDENTIFIER,
+	DIRECTIVE,
 	NUMBER,
 	STRING,
 	PATH,
@@ -80,8 +80,9 @@ struct Listen {
 struct Location {
 	std::string					path; // caminho padrão do location
 	std::string					root; // caso algo sobreponha o destino root
-	std::vector<std::string>	allow_methods; // GET, POST e DELETE
 	bool						autoindex; // caso tenha ou não autoindex ligado
+	size_t						allow_methods; // métodos permitidos "unificados" por bit (acesse por "&")
+	long long					client_max_body_size; // caso tenha especificado dentro de location
 
 	Location();
 	Location(const std::string& path, const std::string& root, const std::vector<std::string>& allow_methods, bool autoindex);
