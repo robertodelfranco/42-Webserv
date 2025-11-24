@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   testing_new_idea.hpp                               :+:      :+:    :+:   */
+/*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: luide-ca <luide-ca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:00 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/11/24 17:26:02 by luide-ca         ###   ########.fr       */
+/*   Updated: 2025/11/24 19:01:45 by luide-ca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,24 +16,41 @@
 # include <string>
 # include <map>
 # include <exception>
+# include <sys/socket.h>
+
+enum ParseState {
+    START_LINE,
+    HEADERS,
+    BODY,
+    DONE
+};
+
+enum Mehtods {
+    GET,
+    POST,
+    DELETE
+};
 
 class HTTPRequest {
     private:
         // raw input
         std::string _buffer;
         std::size_t _lengthBuffer;
+        ParseState  _state;
 
         // request line
+        std::string _requestLine;
         std::string _method;
         std::string _path;
         std::string _httpVersion;
 
         // headers
+        std::string _header;
         std::map<std::string, std::string> _headers;
 
         // body
         std::string _body;
-
+        
     public:
         /*
         ========== Orthodox Canonical Form
@@ -47,25 +64,29 @@ class HTTPRequest {
         /*
         ========== Access to raw buffer info
         */
-        const std::string &getFullBuffer() const;
+        const std::string &getFullBuffer(int fd) const;
         std::size_t        getFullLengthBuffer() const;
+        bool isComplete() const;
 
         /*
         ========== Request line
         */
+        const std::string &getRequestLine() const;
         const std::string &getMethod() const;
         const std::string &getPath() const;
         const std::string &getHTTPVersion() const;
 
-        void setMethod(const std::string &method);
-        void setPath(const std::string &path);
-        void setHTTPVersion(const std::string &version);
+        void setRequestLine(const std::string &buffer);
+        void setMethod(const std::string &requestLine);
+        void setPath(const std::string &requestLine);
+        void setHTTPVersion(const std::string &requestLine);
 
         /*
         ========== Headers
         */
         const std::map<std::string, std::string> &getHeaders() const;
         std::string                               getHeader(const std::string &key) const;
+        void                                      setHeader(const std::string &buffer);
         void                                      addHeader(const std::string &key,
                                                            const std::string &value);
 
@@ -73,14 +94,14 @@ class HTTPRequest {
         ========== Body
         */
         const std::string &getBody() const;
-        void               setBody(const std::string &body);
+        void               setBody(const std::string &buffer);
 
         /*
         ========== Parsing interface
         */
-        void parseRequestLine(const std::string &buffer);
-        void parseHeaderLine(const std::string &buffer);
-        void parseBody(const std::string &buffer);
+        void parseRequestLine(const std::string &requestLine);
+        void parseHeaderLine(const std::string &header);
+        void parseBody(const std::string &body);
 
         /*
         ========== Exceptions
