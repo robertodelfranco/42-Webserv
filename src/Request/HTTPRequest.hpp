@@ -6,7 +6,7 @@
 /*   By: luide-ca <luide-ca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:00 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/11/24 19:01:45 by luide-ca         ###   ########.fr       */
+/*   Updated: 2025/11/25 15:33:03 by luide-ca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,140 +16,95 @@
 # include <string>
 # include <map>
 # include <exception>
-# include <sys/socket.h>
 
-enum ParseState {
-    START_LINE,
-    HEADERS,
-    BODY,
-    DONE
-};
-
-enum Mehtods {
-    GET,
-    POST,
-    DELETE
-};
-
-class HTTPRequest {
+class HTTPRequest
+{
     private:
-        // raw input
-        std::string _buffer;
-        std::size_t _lengthBuffer;
-        ParseState  _state;
+        // ===== Raw data =====
+        std::string _raw;
 
-        // request line
-        std::string _requestLine;
+        // ===== Request line =====
         std::string _method;
         std::string _path;
         std::string _httpVersion;
 
-        // headers
-        std::string _header;
+        // ===== Headers + body =====
         std::map<std::string, std::string> _headers;
+        std::string                        _body;
 
-        // body
-        std::string _body;
+        // ===== Internal helpers =====
+        bool isValidPath(const std::string &path) const;
         
+        bool isValidChunkedBody(const std::string &body) const;
+        bool isValidBody(const std::string &body) const;
+
+        // ===== Internal Parsers =====
+        void parseRequestLine(const std::string &line);
+        void parseHeadersBlock(const std::string &block);
+        void parseBody(const std::string &body);
+
+        void setMethod(const std::string &method);
+        void setPath(const std::string &path);
+        void setHTTPVersion(const std::string &version);
+
     public:
-        /*
-        ========== Orthodox Canonical Form
-        */
+        // ===== Canonical form =====
         HTTPRequest();
-        HTTPRequest(const std::string &buffer, std::size_t lengthBuffer);
+        explicit HTTPRequest(int fd);                // read + parse from fd
         HTTPRequest(const HTTPRequest &other);
         HTTPRequest &operator=(const HTTPRequest &other);
         ~HTTPRequest();
 
-        /*
-        ========== Access to raw buffer info
-        */
-        const std::string &getFullBuffer(int fd) const;
-        std::size_t        getFullLengthBuffer() const;
-        bool isComplete() const;
+        // ===== Public API =====
+        void        readFromFd(int fd);              // only read from socket into _raw
+        void        parse();                         // parse _raw into components
 
-        /*
-        ========== Request line
-        */
-        const std::string &getRequestLine() const;
+        const std::string &getRaw() const;
         const std::string &getMethod() const;
         const std::string &getPath() const;
         const std::string &getHTTPVersion() const;
-
-        void setRequestLine(const std::string &buffer);
-        void setMethod(const std::string &requestLine);
-        void setPath(const std::string &requestLine);
-        void setHTTPVersion(const std::string &requestLine);
-
-        /*
-        ========== Headers
-        */
         const std::map<std::string, std::string> &getHeaders() const;
-        std::string                               getHeader(const std::string &key) const;
-        void                                      setHeader(const std::string &buffer);
-        void                                      addHeader(const std::string &key,
-                                                           const std::string &value);
-
-        /*
-        ========== Body
-        */
+        std::string        getHeader(const std::string &key) const;
         const std::string &getBody() const;
-        void               setBody(const std::string &buffer);
 
-        /*
-        ========== Parsing interface
-        */
-        void parseRequestLine(const std::string &requestLine);
-        void parseHeaderLine(const std::string &header);
-        void parseBody(const std::string &body);
-
-        /*
-        ========== Exceptions
-        */
-        class InputException : public std::exception {
-        public:
-            virtual const char* what() const throw();
-        };
-
+        // ===== Exceptions =====
         class MethodException : public std::exception {
         public:
-            virtual const char* what() const throw();
+            virtual const char *what() const throw();
         };
 
         class PathException : public std::exception {
         public:
-            virtual const char* what() const throw();
+            virtual const char *what() const throw();
         };
 
-        class HTTPTypeException : public std::exception {
+        class HTTPVersionException : public std::exception {
         public:
-            virtual const char* what() const throw();
+            virtual const char *what() const throw();
         };
 
-        class RequestEndLineException : public std::exception {
+        class HeaderException : public std::exception {
         public:
-            virtual const char* what() const throw();
-        };
-
-        class KeyHeaderException : public std::exception {
-        public:
-            virtual const char* what() const throw();
-        };
-
-        class ValueHeaderException : public std::exception {
-        public:
-            virtual const char* what() const throw();
-        };
-
-        class HeaderEndException : public std::exception {
-        public:
-            virtual const char* what() const throw();
+            virtual const char *what() const throw();
         };
 
         class BodyException : public std::exception {
         public:
-            virtual const char* what() const throw();
+            virtual const char *what() const throw();
+        };
+
+        class ParseException : public std::exception {
+        public:
+            ParseException(const std::string &msg);
+            ParseException(const ParseException &other);
+            ParseException &operator=(const ParseException &other);
+            virtual ~ParseException() throw();
+            virtual const char *what() const throw();
+        private:
+            std::string _msg;
         };
 };
 
-#endif
+std::string toLower(const std::string &s);
+
+#endif // HTTP_REQUEST_HPP
