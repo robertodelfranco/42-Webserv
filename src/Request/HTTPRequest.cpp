@@ -6,7 +6,7 @@
 /*   By: luide-ca <luide-ca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:36 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/11/25 15:43:18 by luide-ca         ###   ########.fr       */
+/*   Updated: 2025/11/25 16:24:33 by luide-ca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,13 +20,13 @@
 
 #include "HTTPRequest.hpp"
 
-#include <sstream>      // std::istringstream
+#include <sstream>     
 #include <sys/types.h>
-#include <sys/socket.h> // recv
-#include <unistd.h>     // close (if you ever need it)
-#include <cstring>      // memset
-#include <cctype>       // std::tolower
-#include <cstdlib>      // std::strtol
+#include <sys/socket.h> 
+#include <unistd.h>     
+#include <cstring>      
+#include <cctype>       
+#include <cstdlib>      
 
 // =======================
 // Canonical form
@@ -156,17 +156,14 @@ void HTTPRequest::readFromFd(int fd)
 
 void HTTPRequest::parse()
 {
-    // Find request line end: "\r\n"
     std::string::size_type posRequestLineEnd = _raw.find("\r\n");
     if (posRequestLineEnd == std::string::npos)
         throw ParseException("Malformed HTTP request: missing CRLF after request line");
 
-    // Find header end: "\r\n\r\n"
     std::string::size_type posHeaderEnd = _raw.find("\r\n\r\n");
     if (posHeaderEnd == std::string::npos)
         throw ParseException("Malformed HTTP request: missing empty line after headers");
 
-    // Split into parts
     std::string requestLine = _raw.substr(0, posRequestLineEnd);
     std::string headersBlock = _raw.substr(
         posRequestLineEnd + 2,
@@ -237,53 +234,46 @@ bool HTTPRequest::isValidChunkedBody(const std::string &body) const
 
     while (true)
     {
-        // 1. Read chunk size (hex)
         size_t lineEnd = body.find("\r\n", pos);
         if (lineEnd == std::string::npos)
-            return false; // malformed
+            return (false);
 
         std::string sizeHex = body.substr(pos, lineEnd - pos);
 
-        // Empty size line is invalid
         if (sizeHex.empty())
-            return false;
+            return (false);
 
-        // Convert hex -> integer
         char *end;
         long chunkSize = std::strtol(sizeHex.c_str(), &end, 16);
 
         if (end == sizeHex.c_str() || chunkSize < 0)
-            return false; // invalid hex
+            return (false);
 
-        pos = lineEnd + 2; // move to chunk data
+        pos = lineEnd + 2;
 
-        // 2. If chunk size == 0, that's the terminator
         if (chunkSize == 0)
         {
-            // Must have final CRLF after trailers
             size_t lastCRLF = body.find("\r\n", pos);
             if (lastCRLF == std::string::npos)
-                return false;
+                return (false);
 
-            return true; // valid chunked body
+            return (true);
         }
 
-        // 3. Check that body has enough data for this chunk
         if (pos + chunkSize > len)
-            return false; // too short
+            return (false);
 
-        pos += chunkSize; // skip data bytes
+        pos += chunkSize;
 
-        // 4. After chunk data there MUST be CRLF
         if (pos + 2 > len ||
             body[pos] != '\r' ||
             body[pos + 1] != '\n')
-            return false;
+            return (false);
 
-        pos += 2; // move to next chunk
+        pos += 2;
     }
 
-    return false; // should never reach
+    return (false);
 }
 
 bool HTTPRequest::isValidBody(const std::string &body) const
@@ -293,17 +283,14 @@ bool HTTPRequest::isValidBody(const std::string &body) const
     std::map<std::string, std::string>::const_iterator itTE =
         _headers.find("transfer-encoding");
 
-    // Both present → invalid
     if (itCL != _headers.end() && itTE != _headers.end())
         return (false);
 
-    // Content-Length: N
     if (itCL != _headers.end())
     {
         char *end;
         long contentLen = std::strtol(itCL->second.c_str(), &end, 10);
 
-        // Invalid number
         if (end == itCL->second.c_str() || contentLen < 0)
             return (false);
 
@@ -313,7 +300,6 @@ bool HTTPRequest::isValidBody(const std::string &body) const
         return (true);
     }
 
-    // Transfer-Encoding: chunked
     if (itTE != _headers.end())
     {
         if (itTE->second != "chunked")
@@ -322,16 +308,12 @@ bool HTTPRequest::isValidBody(const std::string &body) const
         if (!isValidChunkedBody(body))
             return (false);
 
-        // Optionally store unchunked result:
-        // this->_body = decodeChunked(body);
         return (true);
     }
 
     if (_method == "GET")
         return (true);
 
-    // No Content-Length, no Transfer-Encoding
-    // Allowed only if body MUST NOT be present
     if (!body.empty())
         return (false);
         
@@ -377,11 +359,9 @@ void HTTPRequest::parseHeadersBlock(const std::string &block)
         std::string key   = line.substr(0, pos);
         std::string value = line.substr(pos + 1);
 
-        // trim leading spaces/tabs in value
         while (!value.empty() && (value[0] == ' ' || value[0] == '\t'))
             value.erase(0, 1);
 
-        // Normalize key to lower-case.
         _headers[toLower(key)] = value;
     }
 }
@@ -402,7 +382,6 @@ void HTTPRequest::setMethod(const std::string &method)
 
 void HTTPRequest::setPath(const std::string &path)
 {
-    // Very simple validation: non-empty and starting with '/'
     if (!isValidPath(path))
         throw PathException();
     _path = path;
@@ -419,7 +398,6 @@ static std::string toLower(const std::string &s)
 {
     std::string out = s;
     for (size_t i = 0; i < out.length(); ++i) {
-        // Cast to unsigned char to avoid UB for chars with high bit set
         unsigned char c = static_cast<unsigned char>(out[i]);
         out[i] = static_cast<char>(std::tolower(c));
     }

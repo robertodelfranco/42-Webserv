@@ -6,7 +6,7 @@
 /*   By: luide-ca <luide-ca@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:00 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/11/25 15:33:03 by luide-ca         ###   ########.fr       */
+/*   Updated: 2025/11/25 16:25:21 by luide-ca         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,14 +50,14 @@ class HTTPRequest
     public:
         // ===== Canonical form =====
         HTTPRequest();
-        explicit HTTPRequest(int fd);                // read + parse from fd
+        explicit HTTPRequest(int fd);
         HTTPRequest(const HTTPRequest &other);
         HTTPRequest &operator=(const HTTPRequest &other);
         ~HTTPRequest();
 
         // ===== Public API =====
-        void        readFromFd(int fd);              // only read from socket into _raw
-        void        parse();                         // parse _raw into components
+        void        readFromFd(int fd);   
+        void        parse();                      
 
         const std::string &getRaw() const;
         const std::string &getMethod() const;
@@ -107,4 +107,4 @@ class HTTPRequest
 
 std::string toLower(const std::string &s);
 
-#endif // HTTP_REQUEST_HPP
+#endif
