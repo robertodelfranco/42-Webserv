@@ -6,6 +6,7 @@ SRC_DIR	=	src
 SRCS	=	main.cpp \
 			Config/Config.cpp \
 			Config/Server.cpp \
+			Config/HttpConfig.cpp \
 			Utils/structs.cpp \
 			Utils/Utils.cpp
 

@@ -85,7 +85,7 @@ struct Location {
 	long long					client_max_body_size; // caso tenha especificado dentro de location
 
 	Location();
-	Location(const std::string& path, const std::string& root, const std::vector<std::string>& allow_methods, bool autoindex);
+	Location(const std::string& path, const std::string& root, bool autoindex, size_t allow_methods, long long client_max_body_size);
 };
 
 #endif

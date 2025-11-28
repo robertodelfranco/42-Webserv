@@ -5,10 +5,10 @@ Listen::Listen() : host(), port(0) {}
 Listen::Listen(const std::string& host, int port)
 : host(host), port(port) {}
 
-Location::Location() : path(), root(), allow_methods(), autoindex(false) {}
+Location::Location() : path(), root(), autoindex(false), allow_methods(0), client_max_body_size(0) {}
 
-Location::Location(const std::string& path, const std::string& root, const std::vector<std::string>& allow_methods, bool autoindex)
-: path(path), root(root), allow_methods(allow_methods), autoindex(autoindex) {}
+Location::Location(const std::string& path, const std::string& root, bool autoindex, size_t allow_methods, long long client_max_body_size)
+: path(path), root(root), autoindex(autoindex), allow_methods(allow_methods), client_max_body_size(client_max_body_size) {}
 
 Token::Token() : type(UNKNOWN), value(), line(0), col(0) {}
 

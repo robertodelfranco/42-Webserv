@@ -49,7 +49,7 @@ size_t	Config::consumeDirective(const std::string& line, size_t count_line, size
 	while (col < line.size()) {
 		c = static_cast<unsigned char>(line[col]);
 		
-		if (Utils::has_char(" {;}", c))
+		if (Utils::has_char(" \t{;}", c))
 			break ;
 		
 		if (!is_directive_char(c))
@@ -61,7 +61,7 @@ size_t	Config::consumeDirective(const std::string& line, size_t count_line, size
 	if (col == start)
 		return col;
 	
-	tokens.push_back(Token(DIRECTIVE, line.substr(start, col - start), count_line, start));
+	tokens.push_back(Token(DIRECTIVE, line.substr(start, col - start), count_line, start + 1));
 	
 	return col;
 }
@@ -80,7 +80,7 @@ size_t	Config::consumeNumber(const std::string& line, size_t count_line, size_t 
 	while (col < line.size()) {
 		c = static_cast<unsigned char>(line[col]);
 
-		if (Utils::has_char(" {;}", c))
+		if (Utils::has_char(" \t{;}", c))
 			break ;
 		
 		if (!std::isdigit(c))
@@ -89,16 +89,49 @@ size_t	Config::consumeNumber(const std::string& line, size_t count_line, size_t 
 		++col;
 	}
 
-	tokens.push_back(Token(NUMBER, line.substr(start, col - start), count_line, start));
+	tokens.push_back(Token(NUMBER, line.substr(start, col - start), count_line, start + 1));
 
 	return col;
 }
 
 size_t	Config::consumeString(const std::string& line, size_t count_line, size_t col) {
-	(void)line;
-	(void)col;
-	(void)count_line;
-	return col + 1;
+	if (col >= line.size())
+		return col;
+
+	unsigned char	quote = static_cast<unsigned char>(line[col]);
+	if (quote != '"' && '\'')
+		return col;
+	
+	size_t		start = col;
+	++col;
+	
+	std::string content;
+	while (col < line.size()) {
+		unsigned char	c = static_cast<unsigned char>(line[col]);
+
+		if (c == '\\') {
+			++col;
+			if (col >= line.size())
+				throw ParseError("Invalid escape at the end of line", count_line, col, line);
+			content.push_back(line[col]);
+			++col;
+			continue ;
+		}
+
+		if (c == quote) {
+			++col;
+			
+			if (content.empty())
+				throw ParseError("Empty string", count_line, col, line);
+
+			tokens.push_back(Token(STRING, content, count_line, start + 1));
+			return col;
+		}
+		content.push_back(line[col]);
+		++col;
+	}
+
+	throw ParseError("Unclosed quotes", count_line, col, line);
 }
 
 size_t	Config::consumePath(const std::string& line, size_t count_line, size_t col) {
@@ -108,23 +141,47 @@ size_t	Config::consumePath(const std::string& line, size_t count_line, size_t co
 	unsigned char	c = static_cast<unsigned char>(line[col]);
 	size_t		start = col;
 
-	if (c != "." || c != "/")
-		throw ParseError("Unexpected char for path", count_line, col, line);
+	if (Utils::has_char(" \t{;}", c))
+		return col;
 	++col;
 
 	while (col < line.size()) {
 		c = static_cast<unsigned char>(line[col]);
 
+		if (Utils::has_char(" \t{;}", c))
+			break ;
+
+		if (c == '\0' || c < 32)
+			throw ParseError("Unexpected control character in path", count_line, col, line);
+
+		++col;
 	}
 
-	return col + 1;
+	tokens.push_back(Token(PATH, line.substr(start, col - start), count_line, start + 1));
+
+	return col;
 }
 
 size_t	Config::consumeSymbol(const std::string& line, size_t count_line, size_t col) {
-	(void)line;
-	(void)col;
-	(void)count_line;
-	return col + 1;
+	if (col >= line.size())
+		return col;
+
+	unsigned char	c = static_cast<unsigned char>(line[col]);
+	size_t		start =	col;
+
+	if (!Utils::has_char("{;}", c))
+		return col;
+	++col;
+
+	TokenType type;
+
+	if (c == '{') type = LBRACE;
+	else if (c == '}') type = RBRACE;
+	else type = SEMICOLON;
+
+	tokens.push_back(Token(type, line.substr(start, col - start), count_line, start + 1));
+
+	return col;
 }
 
 size_t	Config::edgeCases(const std::string& line, size_t count_line, size_t col) {
@@ -191,4 +248,10 @@ void	Config::init(const char *file) {
 	}
 	tokens.push_back(Token(END_OF_STREAM, "EOF", count_lines, 0));
 	config_file.close();
+
+	std::cout << std::endl;
+	for (std::vector<Token>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+		std::cout << GREEN << it->type << " -- " << it->value << "\n" << it->line << " -- " << it->col << RESET << std::endl;
+		std::cout << std::endl;
+	}
 }
