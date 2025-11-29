@@ -31,7 +31,7 @@ enum Methods
 enum TokenType {
 	UNKNOWN,
 	DIRECTIVE,
-	NUMBER,
+	NAME,
 	STRING,
 	PATH,
 	LBRACE,

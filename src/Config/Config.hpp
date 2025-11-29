@@ -12,7 +12,7 @@ class Config {
 
 		void	consumeLine(std::string& line, size_t count_line);
 		size_t	consumeDirective(const std::string& line, size_t count_line, size_t col);
-		size_t	consumeNumber(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeName(const std::string& line, size_t count_line, size_t col);
 		size_t	consumeString(const std::string& line, size_t count_line, size_t col);
 		size_t	consumePath(const std::string& line, size_t count_line, size_t col);
 		size_t	consumeSymbol(const std::string& line, size_t count_line, size_t col);

@@ -18,7 +18,7 @@ Config::ParseError::ParseError(const std::string& msg, size_t line, size_t col, 
 
 	os << "Parse error: " << msg << " (line: " << line << " col: " << col + 1 << ")";
 	if (!snippet.empty())
-		os << "\n" << snippet << "\n" << std::string(col, ' ') << '^';
+		os << "\n" << snippet << "\n" << RED << std::string(col, ' ') << '^' << RESET;
 
 	m_message = os.str();
 };
@@ -66,31 +66,29 @@ size_t	Config::consumeDirective(const std::string& line, size_t count_line, size
 	return col;
 }
 
-size_t	Config::consumeNumber(const std::string& line, size_t count_line, size_t col) {
+size_t	Config::consumeName(const std::string& line, size_t count_line, size_t col) {
 	if (col >= line.size())
 		return col;
 
-	unsigned char	c = static_cast<unsigned char>(line[col]);
 	size_t		start = col;
 
-	if (!std::isdigit(c))
-		throw ParseError("Unexpected char after number sequence", count_line, col, line);
-	++col;
-
 	while (col < line.size()) {
-		c = static_cast<unsigned char>(line[col]);
+		unsigned char	c = static_cast<unsigned char>(line[col]);
 
 		if (Utils::has_char(" \t{;}", c))
 			break ;
+	
+		if (c == '\'' || c == '"')
+			throw ParseError("Invalid quotes in name", count_line, col, line);
 		
-		if (!std::isdigit(c))
-			throw ParseError("Unexpected char after number sequence", count_line, col, line);
+		if (c == '\0' && c < 32)
+			throw ParseError("Unexpected control character in name", count_line, col, line);
 
 		++col;
 	}
 
-	tokens.push_back(Token(NUMBER, line.substr(start, col - start), count_line, start + 1));
-
+	tokens.push_back(Token(NAME, line.substr(start, col - start), count_line, start));
+	
 	return col;
 }
 
@@ -99,7 +97,7 @@ size_t	Config::consumeString(const std::string& line, size_t count_line, size_t 
 		return col;
 
 	unsigned char	quote = static_cast<unsigned char>(line[col]);
-	if (quote != '"' && '\'')
+	if (quote != '"' && quote != '\'')
 		return col;
 	
 	size_t		start = col;
@@ -150,6 +148,9 @@ size_t	Config::consumePath(const std::string& line, size_t count_line, size_t co
 
 		if (Utils::has_char(" \t{;}", c))
 			break ;
+		
+		if (c == '\'' || c == '"')
+			throw ParseError("Invalid quotes in path", count_line, col, line);
 
 		if (c == '\0' || c < 32)
 			throw ParseError("Unexpected control character in path", count_line, col, line);
@@ -188,6 +189,7 @@ size_t	Config::edgeCases(const std::string& line, size_t count_line, size_t col)
 	(void)line;
 	(void)col;
 	(void)count_line;
+	std::cout << CYAN << "Edge case" << RESET << std::endl;
 	return col + 1;
 }
 
@@ -206,8 +208,8 @@ void	Config::consumeLine(std::string& line, size_t count_line) {
 		}
 		if (col == 0 && (std::isalpha(c) || c == '_'))
 			col = consumeDirective(line, count_line, col);
-		else if (std::isdigit(c))
-			col = consumeNumber(line, count_line, col);
+		else if (std::isalpha(c) || c == '_' || std::isdigit(c))
+			col = consumeName(line, count_line, col);
 		else if (c == '\"' || c == '\'')
 			col = consumeString(line, count_line, col);
 		else if (c == '/' || c == '.')
