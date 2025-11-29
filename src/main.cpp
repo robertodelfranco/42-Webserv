@@ -9,10 +9,11 @@ int main(int ac, char **av)
 
     try {
         Config parserConfig;
-        parserConfig.init(av[1]);
+        parserConfig.initLexer(av[1]);
     }
     catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
 
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);

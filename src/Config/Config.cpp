@@ -52,6 +52,9 @@ size_t	Config::consumeDirective(const std::string& line, size_t count_line, size
 		if (Utils::has_char(" \t{;}", c))
 			break ;
 		
+		if (c == '\'' || c == '"')
+			throw ParseError("Invalid quotes in directive", count_line, col, line);
+
 		if (!is_directive_char(c))
 			break ;
 		
@@ -87,7 +90,7 @@ size_t	Config::consumeName(const std::string& line, size_t count_line, size_t co
 		++col;
 	}
 
-	tokens.push_back(Token(NAME, line.substr(start, col - start), count_line, start));
+	tokens.push_back(Token(NAME, line.substr(start, col - start), count_line, start + 1));
 	
 	return col;
 }
@@ -185,12 +188,24 @@ size_t	Config::consumeSymbol(const std::string& line, size_t count_line, size_t 
 	return col;
 }
 
-size_t	Config::edgeCases(const std::string& line, size_t count_line, size_t col) {
-	(void)line;
-	(void)col;
-	(void)count_line;
-	std::cout << CYAN << "Edge case" << RESET << std::endl;
-	return col + 1;
+size_t	Config::edgeCase(const std::string& line, size_t count_line, size_t col) {
+	if (col >= line.size())
+		return col;
+	
+	size_t		start = col;
+		
+	while (col < line.size()) {
+		unsigned char	c = static_cast<unsigned char>(line[col]);
+
+		if (Utils::has_char(" \t{;}", c))
+			break ;
+
+		++col;
+	}
+
+	tokens.push_back(Token(EDGE_CASE, line.substr(start, col - start), count_line, start + 1));
+
+	return col;
 }
 
 void	Config::consumeLine(std::string& line, size_t count_line) {
@@ -217,11 +232,11 @@ void	Config::consumeLine(std::string& line, size_t count_line) {
 		else if (c == '{' || c == '}' || c == ';')
 			col = consumeSymbol(line, count_line, col);
 		else
-			col = edgeCases(line, count_line, col);
+			col = edgeCase(line, count_line, col);
 	}
 }
 
-void	Config::init(const char *file) {
+void	Config::initLexer(const char *file) {
 	if (!file || !*file) {
 		std::cerr << "Nenhum arquivo de configuração foi encontrado" << std::endl;
 		return;
@@ -256,4 +271,49 @@ void	Config::init(const char *file) {
 		std::cout << GREEN << it->type << " -- " << it->value << "\n" << it->line << " -- " << it->col << RESET << std::endl;
 		std::cout << std::endl;
 	}
+
+	initParser();
+}
+
+void	Config::initParser() {
+	if (tokens.size() < 2)
+		throw ParseError("Empty config file", 0, -1, std::string());
+	
+	std::vector<Token>::iterator it = tokens.begin();
+	std::vector<Token>::iterator ite = tokens.end();
+
+	while (it != ite) {
+		switch (it->type)
+		{
+		case DIRECTIVE:
+			std::cout << CYAN << "DIRECTIVE\n" << RESET << std::endl;
+			break;
+		case NAME:
+			std::cout << GREEN << "NAME\n" << RESET << std::endl;
+			break;
+		case STRING:
+			std::cout << YELLOW << "STRING\n" << RESET << std::endl;
+			break;
+		case PATH:
+			std::cout << GREEN << "PATH\n" << RESET << std::endl;
+			break;
+		case LBRACE:
+			std::cout << YELLOW << "SYMBOL LBRACE\n" << RESET << std::endl;
+			break;
+		case RBRACE:
+			std::cout << YELLOW << "SYMBOL RBRACE\n" << RESET << std::endl;
+			break;
+		case SEMICOLON:
+			std::cout << YELLOW << "SYMBOL SEMICOLON\n" << RESET << std::endl;
+			break;
+		case EDGE_CASE:
+			std::cout << GREEN << "EDGE_CASE\n" << RESET << std::endl;
+			break;
+		default:
+		std::cout << RED << "NOTHING" << RESET << std::endl;
+			break;
+		}
+		++it;
+	}
+
 }

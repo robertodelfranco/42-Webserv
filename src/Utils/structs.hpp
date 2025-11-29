@@ -37,6 +37,7 @@ enum TokenType {
 	LBRACE,
 	RBRACE,
 	SEMICOLON,
+	EDGE_CASE,
 	END_OF_STREAM
 };
 
