@@ -90,7 +90,7 @@ size_t	Config::consumeName(const std::string& line, size_t count_line, size_t co
 		++col;
 	}
 
-	tokens.push_back(Token(NAME, line.substr(start, col - start), count_line, start + 1));
+	tokens.push_back(Token(STRING, line.substr(start, col - start), count_line, start + 1));
 	
 	return col;
 }
@@ -177,13 +177,7 @@ size_t	Config::consumeSymbol(const std::string& line, size_t count_line, size_t 
 		return col;
 	++col;
 
-	TokenType type;
-
-	if (c == '{') type = LBRACE;
-	else if (c == '}') type = RBRACE;
-	else type = SEMICOLON;
-
-	tokens.push_back(Token(type, line.substr(start, col - start), count_line, start + 1));
+	tokens.push_back(Token(SYMBOL, line.substr(start, col - start), count_line, start + 1));
 
 	return col;
 }
@@ -282,35 +276,28 @@ void	Config::initParser() {
 	std::vector<Token>::iterator it = tokens.begin();
 	std::vector<Token>::iterator ite = tokens.end();
 
+	// ARRAY DE FUNÇÃO
+
 	while (it != ite) {
 		switch (it->type)
 		{
 		case DIRECTIVE:
-			std::cout << CYAN << "DIRECTIVE\n" << RESET << std::endl;
-			break;
-		case NAME:
-			std::cout << GREEN << "NAME\n" << RESET << std::endl;
+			std::cout << CYAN << it->value << " " << "DIRECTIVE\n" << RESET << std::endl;
 			break;
 		case STRING:
-			std::cout << YELLOW << "STRING\n" << RESET << std::endl;
+			std::cout << YELLOW << it->value << " " << "STRING\n" << RESET << std::endl;
 			break;
 		case PATH:
-			std::cout << GREEN << "PATH\n" << RESET << std::endl;
+			std::cout << GREEN << it->value << " " << "PATH\n" << RESET << std::endl; 
 			break;
-		case LBRACE:
-			std::cout << YELLOW << "SYMBOL LBRACE\n" << RESET << std::endl;
-			break;
-		case RBRACE:
-			std::cout << YELLOW << "SYMBOL RBRACE\n" << RESET << std::endl;
-			break;
-		case SEMICOLON:
-			std::cout << YELLOW << "SYMBOL SEMICOLON\n" << RESET << std::endl;
+		case SYMBOL:
+			std::cout << WHITEBOLD << it->value << " " << "SYMBOL\n" << RESET << std::endl;
 			break;
 		case EDGE_CASE:
-			std::cout << GREEN << "EDGE_CASE\n" << RESET << std::endl;
+			std::cout << GREEN << it->value << " " << "EDGE_CASE\n" << RESET << std::endl;
 			break;
 		default:
-		std::cout << RED << "NOTHING" << RESET << std::endl;
+			std::cout << RED << it->value << " " << "NOTHING" << RESET << std::endl;
 			break;
 		}
 		++it;

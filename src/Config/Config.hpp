@@ -23,7 +23,6 @@ class Config {
 		Config(const Config& other);
 		Config& operator=(const Config& other);
 		~Config();
-
 		class ParseError : public std::exception {
 			private:
 				std::string	m_message;
