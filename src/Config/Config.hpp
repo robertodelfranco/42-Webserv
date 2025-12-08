@@ -1,18 +1,39 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-#include "../Utils/structs.hpp"
-#include "Server.hpp"
+#include "../Utils/Utils.hpp"
+#include "HttpConfig.hpp"
 
 class Config {
 	private:
-		std::vector<Server> servers;
+		HttpConfig			global_config;
+		std::ifstream		config_file;
+		std::vector<Token>	tokens;
+
+		void	consumeLine(std::string& line, size_t count_line);
+		size_t	consumeDirective(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeName(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeString(const std::string& line, size_t count_line, size_t col);
+		size_t	consumePath(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeSymbol(const std::string& line, size_t count_line, size_t col);
+		size_t	edgeCase(const std::string& line, size_t count_line, size_t col);
 
 	public:
-		Config() {};
-		Config(const Config& other) {};
-		Config& operator=(const Config& other) {};
-		~Config() {};
+		Config();
+		Config(const Config& other);
+		Config& operator=(const Config& other);
+		~Config();
+		class ParseError : public std::exception {
+			private:
+				std::string	m_message;
+			public:
+				ParseError(const std::string& msg, size_t line, size_t col, const std::string& snippet);
+				virtual ~ParseError() throw() {};
+				const char* what() const throw();
+		};
+
+		void	initLexer(const char *file);
+		void	initParser();
 };
 
 #endif
