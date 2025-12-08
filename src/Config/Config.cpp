@@ -18,7 +18,7 @@ Config::ParseError::ParseError(const std::string& msg, size_t line, size_t col, 
 
 	os << "Parse error: " << msg << " (line: " << line << " col: " << col + 1 << ")";
 	if (!snippet.empty())
-		os << "\n" << snippet << "\n" << RED << std::string(col, ' ') << '^' << RESET;
+		os << "\n" << snippet << "\n" << RED << std::string(col - 1, ' ') << '^' << RESET;
 
 	m_message = os.str();
 };
@@ -266,41 +266,31 @@ void	Config::initLexer(const char *file) {
 		std::cout << std::endl;
 	}
 
-	initParser();
+	// initParser();
 }
 
-void	Config::initParser() {
-	if (tokens.size() < 2)
-		throw ParseError("Empty config file", 0, -1, std::string());
+// void	Config::consumeToken(std::vector<Token>::iterator it) {
+// 	void (Config::*func[])() {
+// 		&Config::getUnknown(),
+// 		&Config::getDirective(),
+// 		&Config::getString(),
+// 		&Config::getPath(),
+// 		&Config::getSymbol(),
+// 		&Config::getEdgeCase(),
+// 	};
+// }
+
+// void	Config::initParser() {
+// 	if (tokens.size() < 2)
+// 		throw ParseError("Empty config file", 0, -1, std::string());
 	
-	std::vector<Token>::iterator it = tokens.begin();
-	std::vector<Token>::iterator ite = tokens.end();
+// 	std::vector<Token>::iterator it = tokens.begin();
+// 	std::vector<Token>::iterator ite = tokens.end();
 
-	// ARRAY DE FUNÇÃO
 
-	while (it != ite) {
-		switch (it->type)
-		{
-		case DIRECTIVE:
-			std::cout << CYAN << it->value << " " << "DIRECTIVE\n" << RESET << std::endl;
-			break;
-		case STRING:
-			std::cout << YELLOW << it->value << " " << "STRING\n" << RESET << std::endl;
-			break;
-		case PATH:
-			std::cout << GREEN << it->value << " " << "PATH\n" << RESET << std::endl; 
-			break;
-		case SYMBOL:
-			std::cout << WHITEBOLD << it->value << " " << "SYMBOL\n" << RESET << std::endl;
-			break;
-		case EDGE_CASE:
-			std::cout << GREEN << it->value << " " << "EDGE_CASE\n" << RESET << std::endl;
-			break;
-		default:
-			std::cout << RED << it->value << " " << "NOTHING" << RESET << std::endl;
-			break;
-		}
-		++it;
-	}
+// 	while (it != ite) {
+// 		consumeToken(it);
+// 		++it;
+// 	}
 
-}
+// }
