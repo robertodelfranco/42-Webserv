@@ -1,14 +1,15 @@
 #include "Config.hpp"
 
-Config::Config() : global_config() {}
-
-Config::Config(const Config& other) : global_config(other.global_config) {}
-
-Config& Config::operator=(const Config& other) {
-	if (this != &other) {
-		global_config = other.global_config;
-	}
-	return *this;
+Config::Config() : servers(), tokens(), handlers() {
+	handlers.insert(std::make_pair(std::string("listen"), &Config::getListen));
+	handlers.insert(std::make_pair(std::string("server_name"), &Config::getServerName));
+	handlers.insert(std::make_pair(std::string("client_max_body_size"), &Config::getBodySize));
+	handlers.insert(std::make_pair(std::string("root"), &Config::getRoot));
+	handlers.insert(std::make_pair(std::string("index"), &Config::getIndexPage));
+	handlers.insert(std::make_pair(std::string("error_pages"), &Config::getErrorPages));
+	handlers.insert(std::make_pair(std::string("methods"), &Config::getMethods));
+	handlers.insert(std::make_pair(std::string("return"), &Config::getRedirect));
+	handlers.insert(std::make_pair(std::string("cgi_type"), &Config::getCgi));
 }
 
 Config::~Config() {}
@@ -293,15 +294,23 @@ void	Config::getEdgeCase(std::vector<Token>::iterator it) {
 	(void)it;
 }
 
-void	Config::consumeToken(std::vector<Token>::iterator it) {
-	TokenHandler func[6] = {
-		&Config::getUnknown,
-		&Config::getDirective,
-		&Config::getString,
-		&Config::getPath,
-		&Config::getSymbol,
-		&Config::getEdgeCase,
-	};
+std::vector<Token>::iterator&	Config::consumeDirective(std::vector<Token>::iterator it) {
+
+	(this->*handlers[it->value])(it);
+}
+
+std::vector<Token>::iterator&	Config::getServerBlock(std::vector<Token>::iterator it) {
+
+	++it;
+	if (it->value != "{")
+		throw ParseError("Syntax error, expected open brace after directive server", it->line, it->col, it->value);
+
+	++it;
+	if (it->type != DIRECTIVE)	
+		throw ParseError("Syntax error, expected directive here", it->line, it->col, it->value);
+
+	
+	consumeDirective(it);
 }
 
 void	Config::initParser() {
@@ -311,10 +320,9 @@ void	Config::initParser() {
 	std::vector<Token>::iterator it = tokens.begin();
 	std::vector<Token>::iterator ite = tokens.end();
 
-
 	while (it != ite) {
-		consumeToken(it);
-		++it;
+		if (it->type == DIRECTIVE && it->value != "server")
+			throw ParseError("WARNING - directive out of server block is ignored", it->line, it->col, it->value);
+		it = getServerBlock(it); // validate server and then call consume diretive and location block
 	}
-
 }
