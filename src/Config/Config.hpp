@@ -1,48 +1,52 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-#include "../Utils/structs.hpp"
-#include "Server.hpp"
+#include "../Utils/Utils.hpp"
+#include "HttpConfig.hpp"
 
 class Config {
 	private:
-		std::vector<Server> servers;
+		HttpConfig			global_config; // classe que reune todos os dados do arquivo config
+		std::ifstream		config_file;
+		std::vector<Token>	tokens;
+
+		// Parser
+		void	consumeToken(std::vector<Token>::iterator it);
+		void	getUnknown(std::vector<Token>::iterator it);
+		void	getDirective(std::vector<Token>::iterator it);
+		void	getString(std::vector<Token>::iterator it);
+		void	getPath(std::vector<Token>::iterator it);
+		void	getSymbol(std::vector<Token>::iterator it);
+		void	getEdgeCase(std::vector<Token>::iterator it);
+		
+		// Lexer
+		void	consumeLine(std::string& line, size_t count_line);
+		size_t	consumeDirective(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeName(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeString(const std::string& line, size_t count_line, size_t col);
+		size_t	consumePath(const std::string& line, size_t count_line, size_t col);
+		size_t	consumeSymbol(const std::string& line, size_t count_line, size_t col);
+		size_t	edgeCase(const std::string& line, size_t count_line, size_t col);
 
 	public:
-		Config() : servers() {};
-		Config(const Config& other) : servers(other.servers) {};
-		Config& operator=(const Config& other) {
-			if (this != &other) {
-				servers = other.servers;
-			}
-			return *this;
+		Config();
+		Config(const Config& other);
+		Config& operator=(const Config& other);
+		~Config();
+
+		typedef void (Config::*TokenHandler)(std::vector<Token>::iterator); // protótipo para declarar array de funções
+
+		class ParseError : public std::exception {
+			private:
+				std::string	m_message;
+			public:
+				ParseError(const std::string& msg, size_t line, size_t col, const std::string& snippet);
+				virtual ~ParseError() throw() {};
+				const char* what() const throw();
 		};
-		~Config() {};
 
-		void	init(char *file) {
-			if (!file || !*file) {
-				std::cerr << "Nenhum arquivo de configuração fornecido." << std::endl;
-				return;
-			}
-
-			std::ifstream configFile(file);
-			
-			if (!configFile.is_open()) {
-				std::cerr << "Erro ao abrir o arquivo de configuração: " << file << std::endl;
-				return;
-			}
-
-			std::string line;
-			while (std::getline(configFile, line)) {
-				size_t pos = line.find('#');
-				if (pos != std::string::npos) {
-					line = line.substr(0, pos);
-				}
-				if (line.find_first_not_of(" \t") != std::string::npos) {
-					std::cout << line << std::endl;
-				}
-			}
-		};
+		void	initLexer(const char *file);
+		void	initParser();
 };
 
 #endif

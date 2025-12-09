@@ -1,9 +1,10 @@
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef HTTPCONFIG_HPP
+# define HTTPCONFIG_HPP
 
 #include "../Utils/structs.hpp"
+#include "Server.hpp"
 
-class Server {
+class HttpConfig {
 	private:
 		size_t							index; // index dos arquivos servers recebidos por parâmetro
 		std::string						root; // caminho root definido
@@ -11,14 +12,14 @@ class Server {
 		std::vector<std::string>		server_names; // host names
 		std::vector<std::string>		index_files; // arquivos passados pelo curl
 		std::map<int, std::string>		error_pages; // páginas de erros definidas no config
-		std::vector<Location>			locations; // cada bloco location dentro de server
+		std::vector<Server>				servers; // blocos de servidores
 		long long						client_max_body_size; // content-length máximo do body da request
 
 	public:
-		Server();
-		Server(const Server& other);
-		Server& operator=(const Server& other);
-		~Server();
+		HttpConfig();
+		HttpConfig(const HttpConfig& other);
+		HttpConfig& operator=(const HttpConfig& other);
+		~HttpConfig();
 };
 
 #endif

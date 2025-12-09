@@ -2,13 +2,14 @@ NAME	=	webserv
 CC		=	c++
 FLAGS	=	-Wall -Werror -Wextra -std=c++98
 
-SRC_DIR	=	src/
-DIRS	=	./src/Utils ./src/Config ./src/Parser ./src/Network
+SRC_DIR	=	src
 SRCS	=	main.cpp \
-# 			$(addprefix $(DIRS[0])/, Utils.cpp) \
-# 			$(addprefix $(DIRS[1])/, Config.cpp ConfigError.cpp Location.cpp Server.cpp) \
-# 			$(addprefix $(DIRS[2])/, Parser.cpp ParserError.cpp) \
-# 			$(addprefix $(DIRS[3])/, Network.cpp ClientConnection.cpp Response.cpp Request.cpp)
+			Config/Config.cpp \
+			Config/Server.cpp \
+			Config/HttpConfig.cpp \
+			Utils/structs.cpp \
+			Utils/Utils.cpp
+
 
 MAGENTA	=	\033[1;95m
 YELLOW	=	\033[1;93m
@@ -17,8 +18,9 @@ CYAN	=	\033[1;96m
 RED		=	\033[1;91m
 NC		=	\033[0m
 
-OBJS	=	$(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:.cpp=.o)))
 OBJ_DIR	=	objs
+OBJS	=	$(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRCS))
+VPATH	=	$(SRC_DIR):Config:Utils:Parser:Network
 
 all:
 	@if $(MAKE) -q ${NAME} 2>/dev/null; then \
@@ -31,18 +33,13 @@ ${NAME}: ${OBJS}
 	@$(CC) $(OBJS) -o $(NAME)
 	@echo "${CYAN}$(NAME) compiled successfully!${NC}"
 
-$(OBJ_DIR)/%.o:$(SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_DIR)
+$(OBJ_DIR)/%.o : %.cpp
+	@mkdir -p $(dir $@)
 	@${CC} ${FLAGS} -o $@ -c $<
 
 
 clean:
-	@rm -rf ${OBJS}
-	@if [ -d "$(OBJ_DIR)" ]; then \
-		if [ ! "$(ls -A $(OBJ_DIR))" ]; then \
-			rmdir $(OBJ_DIR); \
-		fi \
-	fi
+	@rm -rf $(OBJ_DIR)
 	@echo "${RED}Object files and empty object directory cleaned!${NC}"
 
 fclean:	clean
