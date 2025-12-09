@@ -266,31 +266,55 @@ void	Config::initLexer(const char *file) {
 		std::cout << std::endl;
 	}
 
-	// initParser();
+	initParser();
 }
 
-// void	Config::consumeToken(std::vector<Token>::iterator it) {
-// 	void (Config::*func[])() {
-// 		&Config::getUnknown(),
-// 		&Config::getDirective(),
-// 		&Config::getString(),
-// 		&Config::getPath(),
-// 		&Config::getSymbol(),
-// 		&Config::getEdgeCase(),
-// 	};
-// }
+void	Config::getUnknown(std::vector<Token>::iterator it) {
+	(void)it;
+}
 
-// void	Config::initParser() {
-// 	if (tokens.size() < 2)
-// 		throw ParseError("Empty config file", 0, -1, std::string());
+void	Config::getDirective(std::vector<Token>::iterator it) {
+	(void)it;
+}
+
+void	Config::getString(std::vector<Token>::iterator it) {
+	(void)it;
+}
+
+void	Config::getPath(std::vector<Token>::iterator it) {
+	(void)it;
+}
+
+void	Config::getSymbol(std::vector<Token>::iterator it) {
+	(void)it;
+}
+
+void	Config::getEdgeCase(std::vector<Token>::iterator it) {
+	(void)it;
+}
+
+void	Config::consumeToken(std::vector<Token>::iterator it) {
+	TokenHandler func[6] = {
+		&Config::getUnknown,
+		&Config::getDirective,
+		&Config::getString,
+		&Config::getPath,
+		&Config::getSymbol,
+		&Config::getEdgeCase,
+	};
+}
+
+void	Config::initParser() {
+	if (tokens.size() < 2)
+		throw ParseError("Empty config file", 0, -1, std::string());
 	
-// 	std::vector<Token>::iterator it = tokens.begin();
-// 	std::vector<Token>::iterator ite = tokens.end();
+	std::vector<Token>::iterator it = tokens.begin();
+	std::vector<Token>::iterator ite = tokens.end();
 
 
-// 	while (it != ite) {
-// 		consumeToken(it);
-// 		++it;
-// 	}
+	while (it != ite) {
+		consumeToken(it);
+		++it;
+	}
 
-// }
+}
