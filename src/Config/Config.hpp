@@ -15,6 +15,7 @@ class Config {
 
 		// Parser
 		std::vector<Token>::iterator	getServerBlock(std::vector<Token>::iterator& start, std::vector<Token>::iterator end);
+		void							consumeSemiColon(std::vector<Token>::iterator& it);
 		void							consumeDirective(Server& server, std::vector<Token>::iterator& it);
 		void							getListen(Server& server, std::vector<Token>::iterator& it);
 		void							getServerName(Server& server, std::vector<Token>::iterator& it);
@@ -38,8 +39,6 @@ class Config {
 
 	public:
 		Config();
-		Config(const Config& other);
-		Config& operator=(const Config& other);
 		~Config();
 
 		class ParseError : public std::exception {

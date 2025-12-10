@@ -312,6 +312,12 @@ void	Config::getLocationBlock(Server& server, std::vector<Token>::iterator& star
 	(void)server;
 }
 
+void	Config::consumeSemiColon(std::vector<Token>::iterator& it) {
+	if (it->type != SYMBOL || it->value != ";")
+		throw ParseError("Expected semi colon at the end of line", it->line, it->col, it->value);
+	++it;
+}
+
 void	Config::consumeDirective(Server& server, std::vector<Token>::iterator& it) {
 	std::map<std::string, TokenHandler>::iterator function = handlers.find(it->value);
 
@@ -320,7 +326,7 @@ void	Config::consumeDirective(Server& server, std::vector<Token>::iterator& it) 
 
 	(this->*(function->second))(server, it); // cada função consome a linha toda e avança o iterator até o token ';'
 
-	++it; // aqui vai uma função "expect" para consumir o token esperado ';'
+	consumeSemiColon(it); // aqui vai uma função "expect" para consumir o token esperado ';'
 }
 
 std::vector<Token>::iterator	Config::getServerBlock(std::vector<Token>::iterator& start, std::vector<Token>::iterator end) {
