@@ -10,6 +10,7 @@ Config::Config() : servers(), tokens(), handlers() {
 	handlers.insert(std::make_pair(std::string("methods"), &Config::getMethods));
 	handlers.insert(std::make_pair(std::string("return"), &Config::getRedirect));
 	handlers.insert(std::make_pair(std::string("cgi_type"), &Config::getCgi));
+	handlers.insert(std::make_pair(std::string("location"), &Config::getLocationBlock));
 }
 
 Config::~Config() {}
@@ -17,9 +18,9 @@ Config::~Config() {}
 Config::ParseError::ParseError(const std::string& msg, size_t line, size_t col, const std::string& snippet) {
 	std::ostringstream	os;
 
-	os << "Parse error: " << msg << " (line: " << line << " col: " << col + 1 << ")";
+	os << "Parse error: " << msg << " (line: " << line << " col: " << (col == 0 ? col : col - 1) << ")";
 	if (!snippet.empty())
-		os << "\n" << snippet << "\n" << RED << std::string(col - 1, ' ') << '^' << RESET;
+		os << "\n" << snippet << "\n" << RED << std::string((col == 0 ? col : col - 1), ' ') << '^' << RESET;
 
 	m_message = os.str();
 };
@@ -270,59 +271,100 @@ void	Config::initLexer(const char *file) {
 	initParser();
 }
 
-void	Config::getUnknown(std::vector<Token>::iterator it) {
+void	Config::getListen(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
 	(void)it;
 }
-
-void	Config::getDirective(std::vector<Token>::iterator it) {
+void	Config::getServerName(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
 	(void)it;
 }
-
-void	Config::getString(std::vector<Token>::iterator it) {
+void	Config::getBodySize(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
 	(void)it;
 }
-
-void	Config::getPath(std::vector<Token>::iterator it) {
+void	Config::getRoot(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
 	(void)it;
 }
-
-void	Config::getSymbol(std::vector<Token>::iterator it) {
+void	Config::getIndexPage(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
 	(void)it;
 }
-
-void	Config::getEdgeCase(std::vector<Token>::iterator it) {
+void	Config::getErrorPages(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
 	(void)it;
 }
-
-std::vector<Token>::iterator&	Config::consumeDirective(std::vector<Token>::iterator it) {
-
-	(this->*handlers[it->value])(it);
+void	Config::getMethods(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
+	(void)it;
+}
+void	Config::getRedirect(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
+	(void)it;
+}
+void	Config::getCgi(Server& server, std::vector<Token>::iterator& it) {
+	(void)server;
+	(void)it;
+}
+void	Config::getLocationBlock(Server& server, std::vector<Token>::iterator& start) {
+	(void)start;
+	(void)server;
 }
 
-std::vector<Token>::iterator&	Config::getServerBlock(std::vector<Token>::iterator it) {
+void	Config::consumeDirective(Server& server, std::vector<Token>::iterator& it) {
+	std::map<std::string, TokenHandler>::iterator function = handlers.find(it->value);
 
-	++it;
-	if (it->value != "{")
-		throw ParseError("Syntax error, expected open brace after directive server", it->line, it->col, it->value);
+	if (function == handlers.end())
+		throw ParseError("Unknown directive", it->line, it->col, it->value);
 
-	++it;
-	if (it->type != DIRECTIVE)	
-		throw ParseError("Syntax error, expected directive here", it->line, it->col, it->value);
+	(this->*(function->second))(server, it); // cada função consome a linha toda e avança o iterator até o token ';'
 
+	++it; // aqui vai uma função "expect" para consumir o token esperado ';'
+}
+
+std::vector<Token>::iterator	Config::getServerBlock(std::vector<Token>::iterator& start, std::vector<Token>::iterator end) {
+
+	++start;
+	if (start->value != "{")
+		throw ParseError("Syntax error, expected open brace after directive server", start->line, start->col, start->value);
+
+	if (start->value == "}")
+		throw ParseError("Syntax error, server block empty", start->line, start->col, start->value);
 	
-	consumeDirective(it);
+	++start;
+	if (start->type != DIRECTIVE)
+		throw ParseError("Syntax error, expected directive here", start->line, start->col, start->value);
+
+	Server	server;
+		
+	while (start != end) {
+		if (start->type != DIRECTIVE)
+			throw ParseError("Syntax error", start->line, start->col, start->value);
+
+		consumeDirective(server, start); // location block vai ser consumido totalmente aqui dentro, sem perigo de "vazar" uma close brace pra condição abaixo
+
+		if (start->type == SYMBOL && start->value == "}") {
+			++start;
+			break ;
+		}
+	}
+	servers.push_back(server);
+	return start;
 }
 
 void	Config::initParser() {
 	if (tokens.size() < 2)
-		throw ParseError("Empty config file", 0, -1, std::string());
+		throw ParseError("Empty config file", 0, 0, std::string());
 	
 	std::vector<Token>::iterator it = tokens.begin();
 	std::vector<Token>::iterator ite = tokens.end();
 
 	while (it != ite) {
+		if (it->type == END_OF_STREAM)
+			break ;
 		if (it->type == DIRECTIVE && it->value != "server")
 			throw ParseError("WARNING - directive out of server block is ignored", it->line, it->col, it->value);
-		it = getServerBlock(it); // validate server and then call consume diretive and location block
+		it = getServerBlock(it, ite); // validate server and then call consume diretive and location block
 	}
 }
