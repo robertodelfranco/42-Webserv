@@ -157,7 +157,7 @@ size_t	Config::consumePath(const std::string& line, size_t count_line, size_t co
 		if (c == '\'' || c == '"')
 			throw ParseError("Invalid quotes in path", count_line, col, line);
 
-		if (c == '\0' || c < 32)
+		if (c < 32)
 			throw ParseError("Unexpected control character in path", count_line, col, line);
 
 		++col;

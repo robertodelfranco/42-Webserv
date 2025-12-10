@@ -7,8 +7,8 @@ int main(int ac, char **av)
         return 1;
     }
 
+    Config parserConfig;
     try {
-        Config parserConfig;
         parserConfig.initLexer(av[1]);
     }
     catch (const std::exception& e) {
