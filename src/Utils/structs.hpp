@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdexcept>
+#include "../Response/Response.hpp"
 
 #define WHITEBOLD "\033[1;37m"
 #define YELLOW "\033[1;33m"
@@ -82,10 +83,10 @@ struct Location {
 	std::vector<std::string>	redir; // caso tenha redirect de paginas			
 	bool						autoindex; // caso tenha ou não autoindex ligado
 	size_t						allow_methods; // métodos permitidos "unificados" por bit (acesse por "&")
-	long long					client_max_body_size; // caso tenha especificado dentro de location
+	long long					client_max_body__size; // caso tenha especificado dentro de location
 
 	Location();
-	Location(const std::string& path, const std::string& root, std::vector<std::string> redir, bool autoindex, size_t allow_methods, long long client_max_body_size);
+	Location(const std::string& path, const std::string& root, std::vector<std::string> redir, bool autoindex, size_t allow_methods, long long client_max_body__size);
 };
 
 #endif

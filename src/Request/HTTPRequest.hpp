@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luide-ca <luide-ca@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rheringe <rheringe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:00 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/11/25 16:25:21 by luide-ca         ###   ########.fr       */
+/*   Updated: 2025/12/12 14:01:18 by rheringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,20 +28,20 @@ class HTTPRequest
         std::string _path;
         std::string _httpVersion;
 
-        // ===== Headers + body =====
+        // ===== Headers + body_ =====
         std::map<std::string, std::string> _headers;
-        std::string                        _body;
+        std::string                        _body_;
 
         // ===== Internal helpers =====
         bool isValidPath(const std::string &path) const;
         
-        bool isValidChunkedBody(const std::string &body) const;
-        bool isValidBody(const std::string &body) const;
+        bool isValidChunkedbody_(const std::string &body_) const;
+        bool isValidbody_(const std::string &body_) const;
 
         // ===== Internal Parsers =====
         void parseRequestLine(const std::string &line);
         void parseHeadersBlock(const std::string &block);
-        void parseBody(const std::string &body);
+        void parsebody_(const std::string &body_);
 
         void setMethod(const std::string &method);
         void setPath(const std::string &path);
@@ -65,7 +65,7 @@ class HTTPRequest
         const std::string &getHTTPVersion() const;
         const std::map<std::string, std::string> &getHeaders() const;
         std::string        getHeader(const std::string &key) const;
-        const std::string &getBody() const;
+        const std::string &getbody_() const;
 
         // ===== Exceptions =====
         class MethodException : public std::exception {
@@ -88,7 +88,7 @@ class HTTPRequest
             virtual const char *what() const throw();
         };
 
-        class BodyException : public std::exception {
+        class body_Exception : public std::exception {
         public:
             virtual const char *what() const throw();
         };

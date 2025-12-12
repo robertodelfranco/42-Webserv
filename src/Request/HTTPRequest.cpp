@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: luide-ca <luide-ca@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rheringe <rheringe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:36 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/11/25 16:24:33 by luide-ca         ###   ########.fr       */
+/*   Updated: 2025/12/12 14:01:18 by rheringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ HTTPRequest::HTTPRequest()
   _path(),
   _httpVersion(),
   _headers(),
-  _body()
+  _body_()
 {}
 
 HTTPRequest::HTTPRequest(int fd)
@@ -47,7 +47,7 @@ HTTPRequest::HTTPRequest(int fd)
   _path(),
   _httpVersion(),
   _headers(),
-  _body()
+  _body_()
 {
     readFromFd(fd);
     parse();
@@ -59,7 +59,7 @@ HTTPRequest::HTTPRequest(const HTTPRequest &other)
   _path(other._path),
   _httpVersion(other._httpVersion),
   _headers(other._headers),
-  _body(other._body)
+  _body_(other._body_)
 {}
 
 HTTPRequest &HTTPRequest::operator=(const HTTPRequest &other)
@@ -70,7 +70,7 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &other)
         _path        = other._path;
         _httpVersion = other._httpVersion;
         _headers     = other._headers;
-        _body        = other._body;
+        _body_        = other._body_;
     }
     return *this;
 }
@@ -102,9 +102,9 @@ const char *HTTPRequest::HeaderException::what() const throw()
     return "HTTPRequest: invalid header";
 }
 
-const char *HTTPRequest::BodyException::what() const throw()
+const char *HTTPRequest::body_Exception::what() const throw()
 {
-    return "HTTPRequest: invalid body length or malformed body";
+    return "HTTPRequest: invalid body_ length or malformed body_";
 }
 
 // ParseException with message
@@ -169,11 +169,11 @@ void HTTPRequest::parse()
         posRequestLineEnd + 2,
         posHeaderEnd - (posRequestLineEnd + 2)
     );
-    std::string body = _raw.substr(posHeaderEnd + 4);
+    std::string body_ = _raw.substr(posHeaderEnd + 4);
 
     parseRequestLine(requestLine);
     parseHeadersBlock(headersBlock);
-    parseBody(body);
+    parsebody_(body_);
 }
 
 const std::string &HTTPRequest::getRaw() const
@@ -209,9 +209,9 @@ std::string HTTPRequest::getHeader(const std::string &key) const
     return it->second;
 }
 
-const std::string &HTTPRequest::getBody() const
+const std::string &HTTPRequest::getbody_() const
 {
-    return _body;
+    return _body_;
 }
 
 // =======================
@@ -227,18 +227,18 @@ bool HTTPRequest::isValidPath(const std::string &path) const
     return (true);
 }
 
-bool HTTPRequest::isValidChunkedBody(const std::string &body) const
+bool HTTPRequest::isValidChunkedbody_(const std::string &body_) const
 {
     size_t pos = 0;
-    size_t len = body.length();
+    size_t len = body_.length();
 
     while (true)
     {
-        size_t lineEnd = body.find("\r\n", pos);
+        size_t lineEnd = body_.find("\r\n", pos);
         if (lineEnd == std::string::npos)
             return (false);
 
-        std::string sizeHex = body.substr(pos, lineEnd - pos);
+        std::string sizeHex = body_.substr(pos, lineEnd - pos);
 
         if (sizeHex.empty())
             return (false);
@@ -253,7 +253,7 @@ bool HTTPRequest::isValidChunkedBody(const std::string &body) const
 
         if (chunkSize == 0)
         {
-            size_t lastCRLF = body.find("\r\n", pos);
+            size_t lastCRLF = body_.find("\r\n", pos);
             if (lastCRLF == std::string::npos)
                 return (false);
 
@@ -266,8 +266,8 @@ bool HTTPRequest::isValidChunkedBody(const std::string &body) const
         pos += chunkSize;
 
         if (pos + 2 > len ||
-            body[pos] != '\r' ||
-            body[pos + 1] != '\n')
+            body_[pos] != '\r' ||
+            body_[pos + 1] != '\n')
             return (false);
 
         pos += 2;
@@ -276,7 +276,7 @@ bool HTTPRequest::isValidChunkedBody(const std::string &body) const
     return (false);
 }
 
-bool HTTPRequest::isValidBody(const std::string &body) const
+bool HTTPRequest::isValidbody_(const std::string &body_) const
 {
     std::map<std::string, std::string>::const_iterator itCL =
         _headers.find("content-length");
@@ -294,7 +294,7 @@ bool HTTPRequest::isValidBody(const std::string &body) const
         if (end == itCL->second.c_str() || contentLen < 0)
             return (false);
 
-        if (static_cast<size_t>(contentLen) != body.length())
+        if (static_cast<size_t>(contentLen) != body_.length())
             return (false);
 
         return (true);
@@ -305,7 +305,7 @@ bool HTTPRequest::isValidBody(const std::string &body) const
         if (itTE->second != "chunked")
             return (false);
 
-        if (!isValidChunkedBody(body))
+        if (!isValidChunkedbody_(body_))
             return (false);
 
         return (true);
@@ -314,7 +314,7 @@ bool HTTPRequest::isValidBody(const std::string &body) const
     if (_method == "GET")
         return (true);
 
-    if (!body.empty())
+    if (!body_.empty())
         return (false);
         
     return (true);
@@ -366,11 +366,11 @@ void HTTPRequest::parseHeadersBlock(const std::string &block)
     }
 }
 
-void HTTPRequest::parseBody(const std::string &body)
+void HTTPRequest::parsebody_(const std::string &body_)
 {
-    if (!isValidBody(body))
-        throw BodyException();
-    _body = body;
+    if (!isValidbody_(body_))
+        throw body_Exception();
+    _body_ = body_;
 }
 
 void HTTPRequest::setMethod(const std::string &method)
