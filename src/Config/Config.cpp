@@ -272,8 +272,21 @@ void	Config::initLexer(const char *file) {
 }
 
 void	Config::getListen(Server& server, std::vector<Token>::iterator& it) {
-	(void)server;
-	(void)it;
+	++it;
+	if (it->type != STRING)
+		throw ParseError("Invalid listen argument", it->line, it->col, it->value);
+
+	std::string	value;
+
+	value = Utils::trim(it->value);
+
+	size_t	last = value.find_last_not_of(":");
+
+	server.setListen(value.substr(0, last), value.substr(last, value.size() - last));
+
+	++it;
+	if (it->type != SYMBOL)
+		throw ParseError("Listen only accept one argument", it->line, it->col, it->value);
 }
 void	Config::getServerName(Server& server, std::vector<Token>::iterator& it) {
 	(void)server;
@@ -335,6 +348,7 @@ std::vector<Token>::iterator	Config::getServerBlock(std::vector<Token>::iterator
 	if (start->value != "{")
 		throw ParseError("Syntax error, expected open brace after directive server", start->line, start->col, start->value);
 
+	++start;
 	if (start->value == "}")
 		throw ParseError("Syntax error, server block empty", start->line, start->col, start->value);
 	
