@@ -6,7 +6,7 @@
 /*   By: rheringe <rheringe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:00 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/12/12 14:01:18 by rheringe         ###   ########.fr       */
+/*   Updated: 2025/12/15 17:34:01 by rheringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ class HTTPRequest
 
         // ===== Headers + body_ =====
         std::map<std::string, std::string> _headers;
-        std::string                        _body_;
+        std::string                        _body;
 
         // ===== Internal helpers =====
         bool isValidPath(const std::string &path) const;
@@ -65,7 +65,7 @@ class HTTPRequest
         const std::string &getHTTPVersion() const;
         const std::map<std::string, std::string> &getHeaders() const;
         std::string        getHeader(const std::string &key) const;
-        const std::string &getbody_() const;
+        const std::string &getBody() const;
 
         // ===== Exceptions =====
         class MethodException : public std::exception {

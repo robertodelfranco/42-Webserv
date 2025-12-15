@@ -44,6 +44,14 @@ void Response::setHeader(const std::string &key, const std::string &value){
 	headers[key] = value;
 }
 
+// set body and update Content-Length
+void Response::setBody(const std::string &b){
+	body = b;
+	std::ostringstream oss;
+	oss << body.size();
+	headers["Content-Length"] = oss.str();
+}
+
 // try read the file of the path and make the body
 bool Response::setBodyFromFile(const std::string &path){
 	std::ifstream ifs(path.c_str(), std::ios::in | std::ios::binary); //open the file for read in binary mode
@@ -66,7 +74,7 @@ void Response::setCloseAfterSend(bool close){
 // glue everthing to make the message error.
 std::string Response::toString() const{
 	std::ostringstream out;
-	out << "HTTP/1.1" <<status_code << " " << status_message << "\r\n";
+	out << "HTTP/1.1 " << status_code << " " << status_message << "\r\n";
 	if (headers.find("Content-Length") == headers.end()){
 		std::ostringstream oss;
 		oss << body.size();

@@ -6,7 +6,7 @@
 /*   By: rheringe <rheringe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 17:26:36 by luide-ca          #+#    #+#             */
-/*   Updated: 2025/12/12 14:01:18 by rheringe         ###   ########.fr       */
+/*   Updated: 2025/12/15 17:34:34 by rheringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ HTTPRequest::HTTPRequest()
   _path(),
   _httpVersion(),
   _headers(),
-  _body_()
+  _body()
 {}
 
 HTTPRequest::HTTPRequest(int fd)
@@ -47,7 +47,7 @@ HTTPRequest::HTTPRequest(int fd)
   _path(),
   _httpVersion(),
   _headers(),
-  _body_()
+  _body()
 {
     readFromFd(fd);
     parse();
@@ -59,7 +59,7 @@ HTTPRequest::HTTPRequest(const HTTPRequest &other)
   _path(other._path),
   _httpVersion(other._httpVersion),
   _headers(other._headers),
-  _body_(other._body_)
+  _body(other._body)
 {}
 
 HTTPRequest &HTTPRequest::operator=(const HTTPRequest &other)
@@ -70,7 +70,7 @@ HTTPRequest &HTTPRequest::operator=(const HTTPRequest &other)
         _path        = other._path;
         _httpVersion = other._httpVersion;
         _headers     = other._headers;
-        _body_        = other._body_;
+        _body        = other._body;
     }
     return *this;
 }
@@ -209,9 +209,9 @@ std::string HTTPRequest::getHeader(const std::string &key) const
     return it->second;
 }
 
-const std::string &HTTPRequest::getbody_() const
+const std::string &HTTPRequest::getBody() const
 {
-    return _body_;
+    return _body;
 }
 
 // =======================
@@ -370,7 +370,7 @@ void HTTPRequest::parsebody_(const std::string &body_)
 {
     if (!isValidbody_(body_))
         throw body_Exception();
-    _body_ = body_;
+    _body = body_;
 }
 
 void HTTPRequest::setMethod(const std::string &method)

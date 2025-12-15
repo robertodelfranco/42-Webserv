@@ -8,13 +8,19 @@
 #include <map>
 #include <cstdlib>
 #include <cstring>
+#include <dirent.h>
+#include <sstream>
+#include <unistd.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdexcept>
 #include "../Response/Response.hpp"
+#include "../Response/ErrorResponse.hpp"
+#include "../Request/HTTPRequest.hpp"
 
 #define WHITEBOLD "\033[1;37m"
 #define YELLOW "\033[1;33m"
@@ -80,6 +86,8 @@ struct Listen {
 struct Location {
 	std::string					path; // caminho padrão do location
 	std::string					root; // caso algo sobreponha o destino root
+	std::string					index; // for handle with get
+	size_t 						client_max_body_size; //max body
 	std::vector<std::string>	redir; // caso tenha redirect de paginas			
 	bool						autoindex; // caso tenha ou não autoindex ligado
 	size_t						allow_methods; // métodos permitidos "unificados" por bit (acesse por "&")
